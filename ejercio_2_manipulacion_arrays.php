@@ -24,26 +24,32 @@ Si alguno de los elementos del array a ordenar no contiene la key por la que se 
 La función que desarrolles permitirá que el segundo parámetro puede ser null, pero en ese caso devolverá el resultado sin ningún tipo de reordenación. 
 El caso mostrado es solo un ejemplo, se ha de tener en cuenta que podría aceptar cualquier otro array con keys diferentes.*/
 
-function orderBy($array = [], $orderBy = []) {
-    $columnOrder = [];
+function orderBy($array, $orderBy) {
+    $data = [];
     foreach ($orderBy as $campo=>$criterio) {
         $sortByCampo = array_filter($array, function($v) use ($campo){
             return !empty($v[$campo]);
         });
         $sortByCampo = array_shift($sortByCampo);
         if (!empty($sortByCampo)) {
-            $columnOrder[$campo] = [
-                array_column($array, $campo)
-                $criterio == 'ASC' ? SORT_ASC : SORT_DESC
-            ];
+            $arraySort = array_column($array, $campo);      
+            if ($criterio == 'ASC') {
+                array_multisort($arraySort,SORT_ASC, $array);    
+            } else {
+                array_multisort($arraySort,SORT_DESC, $array);    
+            }
+            $data["{$campo}_SORT_{$criterio}"] = $array;
+        } else {
+            if ($criterio == 'DESC') {
+                $data = array_merge($data,["{$campo}_SORT_{$criterio}"=>[]]); 
+            } else if ($criterio == 'ASC') {
+                $data = array_merge(["{$campo}_SORT_{$criterio}"=>[]],$data); 
+            } else {
+                $data = array_merge($data,["{$campo}"=>'no sorting']); 
+            }
         }
     }
-    if (!empty($columnOrder)) {
-        //$columns_1, SORT_ASC, $columns_2, SORT_DESC
-        $orderBy = implode(',', $columnOrder);    
-        array_multisort($orderBy, $array);
-    }
-    return $array;
+    return $data;
 }
 
 $array = [ 
@@ -54,7 +60,11 @@ $array = [
     ['user' => 'Patricio', 'age' => 22, 'scoring' => 9], 
 ]; 
 
-$sortCriterion = ['age' => 'DESC', 'scoring' => 'DESC','users'=>'DESC']; 
-$result = orderBy($array, $sortCriterion); 
-
+$sortCriterion = [
+    'age' => 'DESC',
+    'scoring'=>'DESC',
+    'user'=>'ASC',
+    'lastName'=>'daa'
+]; 
+$result = orderBy($array,$sortCriterion);
 print_r($result);
